@@ -1,84 +1,163 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>聊天系统</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .chat-box { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin-bottom: 10px; }
-        .input-box { width: 100%; padding: 10px; margin-bottom: 10px; }
-        .message { padding: 8px; margin: 5px 0; border-radius: 5px; }
-        .user-message { background-color: #e0f7fa; }
-        .bot-message { background-color: #ffecb3; }
-        .file-preview { max-width: 200px; max-height: 200px; margin-top: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>聊天系统</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+    #messages {
+      margin-top: 20px;
+    }
+    .message {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-    <h1>欢迎来到聊天系统</h1>
-    <div class="chat-box" id="chat-box"></div>
+  <h1>聊天系统</h1>
 
-    <textarea id="message" class="input-box" placeholder="输入消息..."></textarea>
-    <input type="file" id="fileInput" />
-    <button onclick="sendMessage()">发送</button>
+  <!-- 注册表单 -->
+  <div id="register-form">
+    <h2>注册</h2>
+    <div class="form-group">
+      <label for="register-username">用户名：</label>
+      <input type="text" id="register-username" placeholder="请输入用户名">
+    </div>
+    <div class="form-group">
+      <label for="register-password">密码：</label>
+      <input type="password" id="register-password" placeholder="请输入密码">
+    </div>
+    <button onclick="registerUser()">注册</button>
+  </div>
 
-    <script>
-        async function sendMessage() {
-            const message = document.getElementById("message").value;
-            const fileInput = document.getElementById("fileInput");
-            const chatBox = document.getElementById("chat-box");
+  <!-- 登录表单 -->
+  <div id="login-form" style="display: none;">
+    <h2>登录</h2>
+    <div class="form-group">
+      <label for="login-username">用户名：</label>
+      <input type="text" id="login-username" placeholder="请输入用户名">
+    </div>
+    <div class="form-group">
+      <label for="login-userId">用户ID：</label>
+      <input type="text" id="login-userId" placeholder="请输入用户ID">
+    </div>
+    <button onclick="loginUser()">登录</button>
+  </div>
 
-            // 先清空输入框
-            document.getElementById("message").value = '';
-            fileInput.value = '';
+  <!-- 用户信息 -->
+  <div id="user-info" style="display: none;">
+    <h3>欢迎，<span id="username"></span> (ID: <span id="user-id"></span>)</h3>
+    <button onclick="logoutUser()">退出登录</button>
+  </div>
 
-            // 显示消息
-            if (message) {
-                chatBox.innerHTML += `<div class="message user-message">${message}</div>`;
-            }
+  <!-- 发送消息 -->
+  <div id="chat" style="display: none;">
+    <h2>发送消息</h2>
+    <div class="form-group">
+      <label for="message">消息内容：</label>
+      <textarea id="message" rows="4" cols="50"></textarea>
+    </div>
+    <button onclick="sendMessage()">发送消息</button>
 
-            // 上传文件（如果有文件）
-            let fileUrl = '';
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const formData = new FormData();
-                formData.append("reqtype", "fileupload");
-                formData.append("fileToUpload", file);
+    <!-- 消息显示 -->
+    <div id="messages"></div>
+  </div>
 
-                const uploadRes = await fetch("https://catbox.moe/user/api.php", {
-                    method: "POST",
-                    body: formData,
-                });
+  <script>
+    const apiUrl = 'https://cece.8ryingye.workers.dev/'; // 填入你 Cloudflare Worker 的 URL
 
-                fileUrl = await uploadRes.text();
-                if (file.type.startsWith("image")) {
-                    chatBox.innerHTML += `<div class="message user-message"><img src="${fileUrl}" class="file-preview" /></div>`;
-                } else if (file.type.startsWith("video")) {
-                    chatBox.innerHTML += `<div class="message user-message"><video controls class="file-preview"><source src="${fileUrl}" type="${file.type}"></video></div>`;
-                }
-            }
+    // 注册用户
+    async function registerUser() {
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
 
-            // 发送到 Worker
-            const data = {
-                from: "用户", // 这里可以替换成用户的名字
-                to: "客服",
-                type: message ? "text" : file.type.startsWith("image") ? "photo" : "video",
-                text: message || '',
-                url: fileUrl,
-            };
+      const response = await fetch(`${apiUrl}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        alert('注册成功！');
+        document.getElementById('register-form').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
+      } else {
+        alert(result.message);
+      }
+    }
 
-            await fetch("https://cece.8ryingye.workers.dev/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-            });
+    // 登录用户
+    async function loginUser() {
+      const username = document.getElementById('login-username').value;
+      const userId = document.getElementById('login-userId').value;
 
-            // 显示客服消息（模拟回复）
-            setTimeout(() => {
-                chatBox.innerHTML += `<div class="message bot-message">客服：我已收到你的消息</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500);
-        }
-    </script>
+      const response = await fetch(`${apiUrl}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, userId }),
+      });
+      const result = await response.json();
+
+      if (result.success) {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('user-info').style.display = 'block';
+        document.getElementById('chat').style.display = 'block';
+
+        // 显示用户信息
+        document.getElementById('username').textContent = result.username;
+        document.getElementById('user-id').textContent = userId;
+
+        // 保存用户信息到本地存储
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('username', result.username);
+      } else {
+        alert(result.message);
+      }
+    }
+
+    // 退出登录
+    function logoutUser() {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      document.getElementById('user-info').style.display = 'none';
+      document.getElementById('chat').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
+
+    // 发送消息
+    async function sendMessage() {
+      const from = localStorage.getItem('username');
+      const to = '客服'; // 目标用户，这里可以改成指定的 ID 或其他方式
+      const text = document.getElementById('message').value;
+
+      const response = await fetch(`${apiUrl}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to, type: 'text', text }),
+      });
+
+      const result = await response.json();
+      if (result.ok) {
+        alert('消息发送成功');
+        document.getElementById('message').value = '';
+      } else {
+        alert('消息发送失败');
+      }
+    }
+  </script>
 </body>
 </html>
