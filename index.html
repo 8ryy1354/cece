@@ -205,8 +205,8 @@ async function addChatPartner() {
 
   const result = await response.json();
 
-  if (result.success && Array.isArray(result.partners)) {
-    result.partners.forEach(partnerId => {
+if (result.success && Array.isArray(result.list)) {
+  result.list.forEach(partnerId => {
       const li = document.createElement('li');
       li.textContent = `ID: ${partnerId} `;
 
