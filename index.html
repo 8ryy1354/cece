@@ -173,30 +173,36 @@ if (result.ok) {
 }
 
 async function loadMessages() {
-  const from = localStorage.getItem('username');
-  const to = document.getElementById('partner-id').value;
-  if (!to) return;
+  const userId = localStorage.getItem('userId');
+  const partnerId = document.getElementById('partner-id').value;
+
+  if (!userId || !partnerId) {
+    console.error("用户ID或聊天对象ID为空");
+    return;
+  }
 
   const response = await fetch(`${apiUrl}/get-messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to })
+    body: JSON.stringify({ userId, partnerId })
   });
 
   const result = await response.json();
-
-  const msgContainer = document.getElementById('messages');
-  msgContainer.innerHTML = '';
+  const container = document.getElementById('messages');
+  container.innerHTML = '';
 
   if (result.success && Array.isArray(result.messages)) {
     result.messages.forEach(msg => {
       const div = document.createElement('div');
       div.className = 'message';
-      div.textContent = `[${msg.from}]：${msg.text}`;
-      msgContainer.appendChild(div);
+      div.textContent = `[${msg.from} ➜ ${msg.to}] ${msg.text}`;
+      container.appendChild(div);
     });
+  } else {
+    container.innerHTML = '<p>暂无消息</p>';
   }
 }
+
 
 
 // 添加聊天对象
@@ -246,7 +252,8 @@ if (result.success && Array.isArray(result.list)) {
       chatBtn.style.marginLeft = '10px';
 chatBtn.onclick = () => {
   document.getElementById('partner-id').value = partnerId;
-  loadMessages(); // 加载聊天记录
+  alert(`聊天对象已切换为 ID: ${partnerId}`);
+  loadMessages(); // ✅ 切换聊天对象时自动加载消息
 };
 
 
