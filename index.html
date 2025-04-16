@@ -67,9 +67,10 @@
       <textarea id="message" placeholder="输入消息内容" rows="4" cols="50"></textarea>
     </div>
     <button onclick="sendMessage()">发送</button>
+  </div>
+
   <!-- ✅ 这里是你要添加的消息容器 -->
   <div id="messages" style="margin-top: 20px;"></div>
-  </div>
 
   <!-- 聊天对象区域 -->
   <div id="chat-partners" style="display:none; margin-top: 30px;">
@@ -82,8 +83,9 @@
   </div>
 
   <script>
-    const apiUrl = 'https://cece.8ryingye.workers.dev';
-
+    let currentChatTarget = null; // 当前聊天对象
+   const apiUrl = 'https://cece.8ryingye.workers.dev';
+    
     async function registerUser() {
       const username = document.getElementById('register-username').value;
       const password = document.getElementById('register-password').value;
@@ -137,6 +139,12 @@
         localStorage.setItem('username', result.username);
 
         loadChatPartners();
+      setInterval(() => {
+  if (currentChatTarget) {
+    loadMessages(); // 自动拉取聊天记录
+  }
+}, 3000); // 每 3 秒执行一次
+
       } else {
         alert(result.message);
       }
@@ -174,7 +182,7 @@ if (result.ok) {
 
 async function loadMessages() {
   const userId = localStorage.getItem('userId');
-  const partnerId = document.getElementById('partner-id').value;
+  const partnerId = currentChatTarget || document.getElementById('partner-id').value;
 
   if (!userId || !partnerId) {
     console.error("用户ID或聊天对象ID为空");
@@ -252,10 +260,9 @@ if (result.success && Array.isArray(result.list)) {
       chatBtn.style.marginLeft = '10px';
 chatBtn.onclick = () => {
   document.getElementById('partner-id').value = partnerId;
-  alert(`聊天对象已切换为 ID: ${partnerId}`);
-  loadMessages(); // ✅ 切换聊天对象时自动加载消息
+  currentChatTarget = partnerId; // ✅ 设置当前聊天对象
+  loadMessages();
 };
-
 
       const delBtn = document.createElement('button');
       delBtn.textContent = '删除';
@@ -272,20 +279,23 @@ chatBtn.onclick = () => {
 }
 
 
-    async function deleteChatPartner(partnerId) {
-      const userId = localStorage.getItem('userId');
-      const response = await fetch(`${apiUrl}/chat-partners?userId=${userId}&partnerId=${partnerId}`, {
-        method: 'DELETE'
-      });
+async function deleteChatPartner(partnerId) {
+  const userId = localStorage.getItem('userId');
+  const response = await fetch(`${apiUrl}/delete-chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, targetId: partnerId })
+  });
 
-      const result = await response.json();
-      if (result.success) {
-        alert('删除成功');
-        loadChatPartners();
-      } else {
-        alert(result.message || '删除失败');
-      }
-    }
+  const result = await response.json();
+  if (result.success) {
+    alert('删除成功');
+    loadChatPartners();
+  } else {
+    alert(result.message || '删除失败');
+  }
+}
+
   </script>
 </body>
 </html>
