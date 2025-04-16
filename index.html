@@ -35,11 +35,11 @@
     <h2>注册</h2>
     <div class="form-group">
       <label for="register-username">用户名：</label>
-      <input type="text" id="register-username" placeholder="请输入用户名">
+      <input type="text" id="username" placeholder="请输入用户名" />
     </div>
     <div class="form-group">
       <label for="register-password">密码：</label>
-      <input type="password" id="register-password" placeholder="请输入密码">
+      <input type="password" id="password" placeholder="请输入密码" />
     </div>
     <button onclick="registerUser()">注册</button>
   </div>
@@ -60,7 +60,7 @@
 
   <!-- 用户信息 -->
   <div id="user-info" style="display: none;">
-    <h3>欢迎，<span id="username"></span> (ID: <span id="user-id"></span>)</h3>
+    <h3>欢迎，<span id="username-display"></span> (ID: <span id="user-id-display"></span>)</h3>
     <button onclick="logoutUser()">退出登录</button>
   </div>
 
@@ -78,27 +78,29 @@
   </div>
 
   <script>
-async function registerUser() {
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+    const apiUrl = 'https://cece.8ryingye.workers.dev'; // Cloudflare Worker 地址
 
-  const response = await fetch('https://cece.8ryingye.workers.dev/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ username, password }),
-  });
+    // 注册用户
+    async function registerUser() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-  const data = await response.json();
+      const response = await fetch(`${apiUrl}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-  if (data.success) {
-    alert(`注册成功，用户 ID: ${data.userId}`);
-  } else {
-    alert(`注册失败: ${data.message}`);
-  }
-}
+      const data = await response.json();
 
+      if (data.success) {
+        alert(`注册成功，用户 ID: ${data.userId}`);
+      } else {
+        alert(`注册失败: ${data.message}`);
+      }
+    }
 
     // 登录用户
     async function loginUser() {
@@ -118,8 +120,8 @@ async function registerUser() {
         document.getElementById('chat').style.display = 'block';
 
         // 显示用户信息
-        document.getElementById('username').textContent = result.username;
-        document.getElementById('user-id').textContent = userId;
+        document.getElementById('username-display').textContent = result.username;
+        document.getElementById('user-id-display').textContent = userId;
 
         // 保存用户信息到本地存储
         localStorage.setItem('userId', userId);
