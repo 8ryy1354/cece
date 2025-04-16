@@ -195,7 +195,7 @@ async function addChatPartner() {
   const list = document.getElementById('partner-list');
   list.innerHTML = '';
 
-  const response = await fetch(`${apiUrl}/chat-partners/list`, {
+  const response = await fetch(`${apiUrl}/get-chats`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
