@@ -172,7 +172,7 @@
 // 添加聊天对象
 async function addChatPartner() {
   const userId = localStorage.getItem('userId');
-  const partnerId = document.getElementById('partner-id').value;
+  const partnerId = document.getElementById('add-partner-id').value;
 
   const response = await fetch(`${apiUrl}/chat-partners`, {
     method: 'POST',
