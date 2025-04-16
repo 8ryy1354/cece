@@ -172,12 +172,12 @@
 // 添加聊天对象
 async function addChatPartner() {
   const userId = localStorage.getItem('userId');
-  const partnerId = document.getElementById('add-partner-id').value;
+  const targetId = document.getElementById('add-partner-id').value;
 
-  const response = await fetch(`${apiUrl}/chat-partners`, {
+  const response = await fetch(`${apiUrl}/add-chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, partnerId }),
+    body: JSON.stringify({ userId, targetId }),
   });
 
   const result = await response.json();
@@ -188,6 +188,7 @@ async function addChatPartner() {
     alert('添加失败：' + result.message);
   }
 }
+
 
 
     async function loadChatPartners() {
