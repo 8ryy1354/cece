@@ -160,14 +160,42 @@
         body: JSON.stringify({ from, to, type: 'text', text })
       });
 
-      const result = await response.json();
-      if (result.ok) {
-        alert('消息发送成功');
-        document.getElementById('message').value = '';
-      } else {
-        alert('消息发送失败');
-      }
-    }
+const result = await response.json();
+if (result.ok) {
+  alert('消息发送成功');
+  document.getElementById('message').value = '';
+  loadMessages(); // ✅ 添加这一行，刷新聊天记录
+} else {
+  alert('消息发送失败');
+}
+}
+
+async function loadMessages() {
+  const from = localStorage.getItem('username');
+  const to = document.getElementById('partner-id').value;
+  if (!to) return;
+
+  const response = await fetch(`${apiUrl}/get-messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to })
+  });
+
+  const result = await response.json();
+
+  const msgContainer = document.getElementById('messages');
+  msgContainer.innerHTML = '';
+
+  if (result.success && Array.isArray(result.messages)) {
+    result.messages.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.textContent = `[${msg.from}]：${msg.text}`;
+      msgContainer.appendChild(div);
+    });
+  }
+}
+
 
 // 添加聊天对象
 async function addChatPartner() {
@@ -214,10 +242,11 @@ if (result.success && Array.isArray(result.list)) {
       const chatBtn = document.createElement('button');
       chatBtn.textContent = '聊天';
       chatBtn.style.marginLeft = '10px';
-      chatBtn.onclick = () => {
-        document.getElementById('partner-id').value = partnerId;
-        alert(`聊天对象已切换为 ID: ${partnerId}`);
-      };
+chatBtn.onclick = () => {
+  document.getElementById('partner-id').value = partnerId;
+  loadMessages(); // 加载聊天记录
+};
+
 
       const delBtn = document.createElement('button');
       delBtn.textContent = '删除';
