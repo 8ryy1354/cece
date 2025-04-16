@@ -9,6 +9,16 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
+    nav {
+      background-color: #333;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+    nav a {
+      color: white;
+      margin-right: 15px;
+      text-decoration: none;
+    }
     .form-group {
       margin-bottom: 15px;
     }
@@ -28,6 +38,14 @@
   </style>
 </head>
 <body>
+
+  <!-- 🔗 导航栏 -->
+  <nav>
+    <a href="index.html">首页</a>
+    <a href="activate.html">激活码</a>
+    <a href="contact.html">联系我们</a>
+  </nav>
+
   <h1>聊天系统</h1>
 
   <!-- 注册表单 -->
@@ -119,11 +137,9 @@
         document.getElementById('user-info').style.display = 'block';
         document.getElementById('chat').style.display = 'block';
 
-        // 显示用户信息
         document.getElementById('username-display').textContent = result.username;
         document.getElementById('user-id-display').textContent = userId;
 
-        // 保存用户信息到本地存储
         localStorage.setItem('userId', userId);
         localStorage.setItem('username', result.username);
       } else {
@@ -143,7 +159,7 @@
     // 发送消息
     async function sendMessage() {
       const from = localStorage.getItem('username');
-      const to = '客服'; // 目标用户，这里可以改成指定的 ID 或其他方式
+      const to = '客服';
       const text = document.getElementById('message').value;
 
       const response = await fetch(`${apiUrl}/send`, {
