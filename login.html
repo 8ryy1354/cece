@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>登录</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f4f4f4;
+      padding: 2em;
+      max-width: 500px;
+      margin: auto;
+    }
+    input, button {
+      display: block;
+      margin: 1em 0;
+      padding: 0.7em;
+      width: 100%;
+      font-size: 1em;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h2>用户登录</h2>
+
+  <input type="text" id="username" placeholder="用户名 或 用户 ID">
+  <button onclick="login()">登录</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function login() {
+      const input = document.getElementById("username").value.trim();
+      const result = document.getElementById("result");
+      result.textContent = "正在登录...";
+
+      const body = input.startsWith("user_") ? { userId: input } : { username: input };
+
+      try {
+        const res = await fetch("https://8ryy1354.8ryingye.workers.dev/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          result.innerHTML = `<p class="success">登录成功！欢迎，<strong>${data.username}</strong>（ID: ${data.userId}）</p>`;
+        } else {
+          result.innerHTML = `<p class="error">登录失败：${data.message}</p>`;
+        }
+      } catch (err) {
+        result.innerHTML = `<p class="error">请求出错：${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
