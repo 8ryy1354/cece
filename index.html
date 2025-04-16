@@ -3,187 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>聊天系统</title>
+  <title>聊天室</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    nav {
-      background-color: #333;
-      padding: 10px;
-      margin-bottom: 20px;
-    }
-    nav a {
-      color: white;
-      margin-right: 15px;
-      text-decoration: none;
+      margin: 30px;
+      max-width: 600px;
     }
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 10px;
+    }
+    input, button {
+      padding: 6px;
+      margin: 4px 0;
     }
     button {
-      padding: 10px 15px;
-      font-size: 16px;
-    }
-    #messages {
-      margin-top: 20px;
-    }
-    .message {
-      margin-bottom: 10px;
-      padding: 10px;
-      background-color: #f1f1f1;
-      border-radius: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-
-  <!-- 🔗 导航栏 -->
-  <nav>
-    <a href="index.html">首页</a>
-    <a href="activate.html">激活码</a>
-    <a href="contact.html">联系我们</a>
-  </nav>
-
-  <h1>聊天系统</h1>
+  <h1>欢迎来到聊天室</h1>
 
   <!-- 注册表单 -->
   <div id="register-form">
     <h2>注册</h2>
     <div class="form-group">
-      <label for="register-username">用户名：</label>
-      <input type="text" id="username" placeholder="请输入用户名" />
+      <input type="text" id="register-username" placeholder="用户名">
     </div>
     <div class="form-group">
-      <label for="register-password">密码：</label>
-      <input type="password" id="password" placeholder="请输入密码" />
+      <input type="password" id="register-password" placeholder="密码">
     </div>
     <button onclick="registerUser()">注册</button>
-    <p>已有账号？<button onclick="showLogin()">去登录</button></p>
+    <p>已有账号？<a href="#" onclick="showLogin()">去登录</a></p>
   </div>
 
-<!-- 登录表单 -->
-<div id="login-form" style="display: none;">
-  <h2>登录</h2>
-  <div class="form-group">
-    <label for="login-username">用户名：</label>
-    <input type="text" id="login-username" placeholder="请输入用户名">
+  <!-- 登录表单 -->
+  <div id="login-form" style="display:none;">
+    <h2>登录</h2>
+    <div class="form-group">
+      <input type="text" id="login-username" placeholder="用户名">
+    </div>
+    <div class="form-group">
+      <input type="password" id="login-password" placeholder="密码">
+    </div>
+    <button onclick="loginUser()">登录</button>
+    <p>没有账号？<a href="#" onclick="showRegister()">去注册</a></p>
   </div>
-  <div class="form-group">
-    <label for="login-password">密码：</label>
-    <input type="password" id="login-password" placeholder="请输入密码">
-  </div>
-  <button onclick="loginUser()">登录</button>
-</div>
 
-
-  <!-- 用户信息 -->
-  <div id="user-info" style="display: none;">
-    <h3>欢迎，<span id="username-display"></span> (ID: <span id="user-id-display"></span>)</h3>
+  <!-- 登录成功后的用户信息 -->
+  <div id="user-info" style="display:none;">
+    <h2>欢迎，<span id="username-display"></span>（ID: <span id="user-id-display"></span>）</h2>
     <button onclick="logoutUser()">退出登录</button>
   </div>
 
-  <!-- 发送消息 -->
-  <div id="chat" style="display: none;">
+  <!-- 聊天区域 -->
+  <div id="chat" style="display:none; margin-top: 20px;">
     <h2>发送消息</h2>
     <div class="form-group">
-      <label for="message">消息内容：</label>
-      <textarea id="message" rows="4" cols="50"></textarea>
+      <input type="text" id="partner-id" placeholder="接收者 ID（可点击聊天对象自动填写）">
     </div>
-    <button onclick="sendMessage()">发送消息</button>
+    <div class="form-group">
+      <textarea id="message" placeholder="输入消息内容" rows="4" cols="50"></textarea>
+    </div>
+    <button onclick="sendMessage()">发送</button>
+  </div>
 
-    <!-- 消息显示 -->
-    <div id="messages"></div>
+  <!-- 聊天对象区域 -->
+  <div id="chat-partners" style="display:none; margin-top: 30px;">
+    <h2>聊天对象</h2>
+    <div class="form-group">
+      <input type="text" id="add-partner-id" placeholder="输入用户 ID 添加聊天对象">
+      <button onclick="addChatPartner()">添加</button>
+    </div>
+    <ul id="partner-list"></ul>
   </div>
 
   <script>
-    const apiUrl = 'https://cece.8ryingye.workers.dev'; // Cloudflare Worker 地址
+    const apiUrl = 'https://cece.8ryingye.workers.dev';
 
-    // 注册用户
     async function registerUser() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
 
       const response = await fetch(`${apiUrl}/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        alert(`注册成功，用户 ID: ${data.userId}`);
+      const result = await response.json();
+      if (result.success) {
+        alert('注册成功，请登录');
+        showLogin();
       } else {
-        alert(`注册失败: ${data.message}`);
+        alert(result.message);
       }
     }
 
-function showLogin() {
-  document.getElementById('register-form').style.display = 'none';
-  document.getElementById('login-form').style.display = 'block';
-}
+    function showLogin() {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
 
-function showRegister() {
-  document.getElementById('login-form').style.display = 'none';
-  document.getElementById('register-form').style.display = 'block';
-}
+    function showRegister() {
+      document.getElementById('register-form').style.display = 'block';
+      document.getElementById('login-form').style.display = 'none';
+    }
 
+    async function loginUser() {
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
 
-    
-    // 登录用户
-async function loginUser() {
-  const username = document.getElementById('login-username').value;
-  const password = document.getElementById('login-password').value;
+      const response = await fetch(`${apiUrl}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-  const response = await fetch(`${apiUrl}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
+      const result = await response.json();
+      if (result.success) {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('user-info').style.display = 'block';
+        document.getElementById('chat').style.display = 'block';
+        document.getElementById('chat-partners').style.display = 'block';
 
-  const result = await response.json();
+        document.getElementById('username-display').textContent = result.username;
+        document.getElementById('user-id-display').textContent = result.userId;
 
-  if (result.success) {
-    document.getElementById('login-form').style.display = 'none';
-    document.getElementById('user-info').style.display = 'block';
-    document.getElementById('chat').style.display = 'block';
+        localStorage.setItem('userId', result.userId);
+        localStorage.setItem('username', result.username);
 
-    // 显示用户信息
-    document.getElementById('username-display').textContent = result.username;
-    document.getElementById('user-id-display').textContent = result.userId;
+        loadChatPartners();
+      } else {
+        alert(result.message);
+      }
+    }
 
-    // 保存用户信息到本地存储
-    localStorage.setItem('userId', result.userId);
-    localStorage.setItem('username', result.username);
-  } else {
-    alert(result.message);
-  }
-}
-
-
-    // 退出登录
     function logoutUser() {
       localStorage.removeItem('userId');
       localStorage.removeItem('username');
       document.getElementById('user-info').style.display = 'none';
       document.getElementById('chat').style.display = 'none';
+      document.getElementById('chat-partners').style.display = 'none';
       document.getElementById('login-form').style.display = 'block';
     }
 
-    // 发送消息
     async function sendMessage() {
       const from = localStorage.getItem('username');
-      const to = '客服';
+      const to = document.getElementById('partner-id').value || '客服';
       const text = document.getElementById('message').value;
 
       const response = await fetch(`${apiUrl}/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to, type: 'text', text }),
+        body: JSON.stringify({ from, to, type: 'text', text })
       });
 
       const result = await response.json();
@@ -192,6 +166,76 @@ async function loginUser() {
         document.getElementById('message').value = '';
       } else {
         alert('消息发送失败');
+      }
+    }
+
+    async function addChatPartner() {
+      const userId = localStorage.getItem('userId');
+      const partnerId = document.getElementById('add-partner-id').value.trim();
+
+      if (!partnerId) return alert("请输入对方 ID");
+
+      const response = await fetch(`${apiUrl}/chat-partners`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, partnerId })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert('添加成功');
+        document.getElementById('add-partner-id').value = '';
+        loadChatPartners();
+      } else {
+        alert(result.message || '添加失败');
+      }
+    }
+
+    async function loadChatPartners() {
+      const userId = localStorage.getItem('userId');
+      const list = document.getElementById('partner-list');
+      list.innerHTML = '';
+
+      const response = await fetch(`${apiUrl}/chat-partners?userId=${userId}`);
+      const result = await response.json();
+
+      if (result.success && Array.isArray(result.partners)) {
+        result.partners.forEach(partnerId => {
+          const li = document.createElement('li');
+          li.textContent = `ID: ${partnerId} `;
+
+          const chatBtn = document.createElement('button');
+          chatBtn.textContent = '聊天';
+          chatBtn.style.marginLeft = '10px';
+          chatBtn.onclick = () => {
+            document.getElementById('partner-id').value = partnerId;
+            alert(`聊天对象已切换为 ID: ${partnerId}`);
+          };
+
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '删除';
+          delBtn.style.marginLeft = '10px';
+          delBtn.onclick = () => deleteChatPartner(partnerId);
+
+          li.appendChild(chatBtn);
+          li.appendChild(delBtn);
+          list.appendChild(li);
+        });
+      }
+    }
+
+    async function deleteChatPartner(partnerId) {
+      const userId = localStorage.getItem('userId');
+      const response = await fetch(`${apiUrl}/chat-partners?userId=${userId}&partnerId=${partnerId}`, {
+        method: 'DELETE'
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        alert('删除成功');
+        loadChatPartners();
+      } else {
+        alert(result.message || '删除失败');
       }
     }
   </script>
