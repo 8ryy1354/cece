@@ -78,27 +78,27 @@
   </div>
 
   <script>
-    const apiUrl = 'https://cece.8ryingye.workers.dev'; // 填入你 Cloudflare Worker 的 URL
+async function registerUser() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
 
-    // 注册用户
-    async function registerUser() {
-      const username = document.getElementById('register-username').value;
-      const password = document.getElementById('register-password').value;
+  const response = await fetch('https://cece.8ryingye.workers.dev/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  });
 
-      const response = await fetch(`${apiUrl}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const result = await response.json();
-      if (result.success) {
-        alert('注册成功！');
-        document.getElementById('register-form').style.display = 'none';
-        document.getElementById('login-form').style.display = 'block';
-      } else {
-        alert(result.message);
-      }
-    }
+  const data = await response.json();
+
+  if (data.success) {
+    alert(`注册成功，用户 ID: ${data.userId}`);
+  } else {
+    alert(`注册失败: ${data.message}`);
+  }
+}
+
 
     // 登录用户
     async function loginUser() {
