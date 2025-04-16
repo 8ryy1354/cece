@@ -63,19 +63,20 @@
     <p>已有账号？<button onclick="showLogin()">去登录</button></p>
   </div>
 
-  <!-- 登录表单 -->
-  <div id="login-form" style="display: none;">
-    <h2>登录</h2>
-    <div class="form-group">
-      <label for="login-username">用户名：</label>
-      <input type="text" id="login-username" placeholder="请输入用户名">
-    </div>
-    <div class="form-group">
-      <label for="login-userId">用户ID：</label>
-      <input type="text" id="login-userId" placeholder="请输入用户ID">
-    </div>
-    <button onclick="loginUser()">登录</button>
+<!-- 登录表单 -->
+<div id="login-form" style="display: none;">
+  <h2>登录</h2>
+  <div class="form-group">
+    <label for="login-username">用户名：</label>
+    <input type="text" id="login-username" placeholder="请输入用户名">
   </div>
+  <div class="form-group">
+    <label for="login-password">密码：</label>
+    <input type="password" id="login-password" placeholder="请输入密码">
+  </div>
+  <button onclick="loginUser()">登录</button>
+</div>
+
 
   <!-- 用户信息 -->
   <div id="user-info" style="display: none;">
@@ -134,31 +135,35 @@ function showRegister() {
 
     
     // 登录用户
-    async function loginUser() {
-      const username = document.getElementById('login-username').value;
-      const userId = document.getElementById('login-userId').value;
+async function loginUser() {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
 
-      const response = await fetch(`${apiUrl}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, userId }),
-      });
-      const result = await response.json();
+  const response = await fetch(`${apiUrl}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
 
-      if (result.success) {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('user-info').style.display = 'block';
-        document.getElementById('chat').style.display = 'block';
+  const result = await response.json();
 
-        document.getElementById('username-display').textContent = result.username;
-        document.getElementById('user-id-display').textContent = userId;
+  if (result.success) {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('user-info').style.display = 'block';
+    document.getElementById('chat').style.display = 'block';
 
-        localStorage.setItem('userId', userId);
-        localStorage.setItem('username', result.username);
-      } else {
-        alert(result.message);
-      }
-    }
+    // 显示用户信息
+    document.getElementById('username-display').textContent = result.username;
+    document.getElementById('user-id-display').textContent = result.userId;
+
+    // 保存用户信息到本地存储
+    localStorage.setItem('userId', result.userId);
+    localStorage.setItem('username', result.username);
+  } else {
+    alert(result.message);
+  }
+}
+
 
     // 退出登录
     function logoutUser() {
