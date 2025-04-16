@@ -60,6 +60,7 @@
       <input type="password" id="password" placeholder="请输入密码" />
     </div>
     <button onclick="registerUser()">注册</button>
+    <p>已有账号？<button onclick="showLogin()">去登录</button></p>
   </div>
 
   <!-- 登录表单 -->
@@ -120,6 +121,18 @@
       }
     }
 
+function showLogin() {
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('login-form').style.display = 'block';
+}
+
+function showRegister() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('register-form').style.display = 'block';
+}
+
+
+    
     // 登录用户
     async function loginUser() {
       const username = document.getElementById('login-username').value;
