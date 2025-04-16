@@ -169,60 +169,69 @@
       }
     }
 
-    async function addChatPartner() {
-      const userId = localStorage.getItem('userId');
-      const partnerId = document.getElementById('add-partner-id').value.trim();
+// 添加聊天对象
+async function addChatPartner() {
+  const userId = localStorage.getItem('userId');
+  const partnerId = document.getElementById('partner-id').value;
 
-      if (!partnerId) return alert("请输入对方 ID");
+  const response = await fetch(`${apiUrl}/chat-partners`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, partnerId }),
+  });
 
-      const response = await fetch(`${apiUrl}/chat-partners`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, partnerId })
-      });
+  const result = await response.json();
+  if (result.success) {
+    alert('添加成功');
+    loadChatPartners();
+  } else {
+    alert('添加失败：' + result.message);
+  }
+}
 
-      const result = await response.json();
-      if (result.success) {
-        alert('添加成功');
-        document.getElementById('add-partner-id').value = '';
-        loadChatPartners();
-      } else {
-        alert(result.message || '添加失败');
-      }
-    }
 
     async function loadChatPartners() {
-      const userId = localStorage.getItem('userId');
-      const list = document.getElementById('partner-list');
-      list.innerHTML = '';
+  const userId = localStorage.getItem('userId');
+  const list = document.getElementById('partner-list');
+  list.innerHTML = '';
 
-      const response = await fetch(`${apiUrl}/chat-partners?userId=${userId}`);
-      const result = await response.json();
+  const response = await fetch(`${apiUrl}/chat-partners/list`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ userId })
+  });
 
-      if (result.success && Array.isArray(result.partners)) {
-        result.partners.forEach(partnerId => {
-          const li = document.createElement('li');
-          li.textContent = `ID: ${partnerId} `;
+  const result = await response.json();
 
-          const chatBtn = document.createElement('button');
-          chatBtn.textContent = '聊天';
-          chatBtn.style.marginLeft = '10px';
-          chatBtn.onclick = () => {
-            document.getElementById('partner-id').value = partnerId;
-            alert(`聊天对象已切换为 ID: ${partnerId}`);
-          };
+  if (result.success && Array.isArray(result.partners)) {
+    result.partners.forEach(partnerId => {
+      const li = document.createElement('li');
+      li.textContent = `ID: ${partnerId} `;
 
-          const delBtn = document.createElement('button');
-          delBtn.textContent = '删除';
-          delBtn.style.marginLeft = '10px';
-          delBtn.onclick = () => deleteChatPartner(partnerId);
+      const chatBtn = document.createElement('button');
+      chatBtn.textContent = '聊天';
+      chatBtn.style.marginLeft = '10px';
+      chatBtn.onclick = () => {
+        document.getElementById('partner-id').value = partnerId;
+        alert(`聊天对象已切换为 ID: ${partnerId}`);
+      };
 
-          li.appendChild(chatBtn);
-          li.appendChild(delBtn);
-          list.appendChild(li);
-        });
-      }
-    }
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '删除';
+      delBtn.style.marginLeft = '10px';
+      delBtn.onclick = () => deleteChatPartner(partnerId);
+
+      li.appendChild(chatBtn);
+      li.appendChild(delBtn);
+      list.appendChild(li);
+    });
+  } else {
+    alert(result.message || '获取聊天对象失败');
+  }
+}
+
 
     async function deleteChatPartner(partnerId) {
       const userId = localStorage.getItem('userId');
