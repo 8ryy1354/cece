@@ -57,17 +57,32 @@
     <button onclick="logoutUser()">退出登录</button>
   </div>
 
-  <!-- 聊天区域 -->
-  <div id="chat" style="display:none; margin-top: 20px;">
-    <h2>发送消息</h2>
-    <div class="form-group">
-      <input type="text" id="partner-id" placeholder="接收者 ID（可点击聊天对象自动填写）">
-    </div>
-    <div class="form-group">
-      <textarea id="message" placeholder="输入消息内容" rows="4" cols="50"></textarea>
-    </div>
-    <button onclick="sendMessage()">发送</button>
+<!-- 聊天区域 -->
+<div id="chat" style="display:none; margin-top: 20px;">
+  <h2>发送消息</h2>
+
+  <!-- 接收者 ID 输入 -->
+  <div class="form-group">
+    <input type="text" id="partner-id" placeholder="接收者 ID（可点击聊天对象自动填写）">
   </div>
+
+  <!-- 文本消息输入 -->
+  <div class="form-group">
+    <textarea id="message" placeholder="输入消息内容" rows="4" cols="50"></textarea>
+  </div>
+
+  <!-- ✅ 文件上传输入 -->
+  <div class="form-group">
+    <input type="file" id="fileInput">
+  </div>
+
+  <!-- 发送按钮 -->
+  <button onclick="sendMessage()">发送</button>
+
+  <!-- ✅ 聊天记录显示区域 -->
+  <div id="messages" style="margin-top: 20px;"></div>
+</div>
+
 
   <!-- ✅ 这里是你要添加的消息容器 -->
   <div id="messages" style="margin-top: 20px;"></div>
@@ -175,25 +190,58 @@ async function loginUser() {
     }
 
     async function sendMessage() {
-      const from = localStorage.getItem('username');
-      const to = document.getElementById('partner-id').value || '客服';
-      const text = document.getElementById('message').value;
+  const from = localStorage.getItem('username');
+  const to = document.getElementById('partner-id').value || '客服';
+  const text = document.getElementById('message').value;
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
 
-      const response = await fetch(`${apiUrl}/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to, type: 'text', text })
-      });
+  let type = 'text';
+  let payload = { from, to, type, text };
 
-const result = await response.json();
-if (result.ok) {
-  alert('消息发送成功');
-  document.getElementById('message').value = '';
-  loadMessages(); // ✅ 添加这一行，刷新聊天记录
-} else {
-  alert('消息发送失败');
+  if (file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const uploadRes = await fetch('https://catbox.moe/user/api.php', {
+      method: 'POST',
+      body: new URLSearchParams({
+        reqtype: 'fileupload',
+        fileToUpload: file
+      })
+    });
+
+    const url = await uploadRes.text();
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+      type = 'photo';
+    } else if (['mp4', 'webm'].includes(ext)) {
+      type = 'video';
+    } else {
+      type = 'document';
+    }
+
+    payload = { from, to, type, url };
+  }
+
+  const response = await fetch(`${apiUrl}/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+  if (result.ok) {
+    alert('消息发送成功');
+    document.getElementById('message').value = '';
+    fileInput.value = '';
+    loadMessages();
+  } else {
+    alert('消息发送失败');
+  }
 }
-}
+
 
 async function loadMessages() {
   const userId = localStorage.getItem('userId');
