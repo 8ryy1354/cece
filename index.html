@@ -115,40 +115,55 @@
       document.getElementById('login-form').style.display = 'none';
     }
 
-    async function loginUser() {
-      const username = document.getElementById('login-username').value;
-      const password = document.getElementById('login-password').value;
+async function loginUser() {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
 
-      const response = await fetch(`${apiUrl}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+  const response = await fetch(`${apiUrl}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('user-info').style.display = 'block';
+    document.getElementById('chat').style.display = 'block';
+    document.getElementById('chat-partners').style.display = 'block';
+
+    document.getElementById('username-display').textContent = result.username;
+    document.getElementById('user-id-display').textContent = result.userId;
+
+    localStorage.setItem('userId', result.userId);
+    localStorage.setItem('username', result.username);
+
+    // ✅ 1. 获取所有用户并保存为 userMap（用于显示用户名）
+    window.userMap = {};
+    const userRes = await fetch(`${apiUrl}/get-users`, { method: 'POST' });
+    const userData = await userRes.json();
+    if (userData.success && Array.isArray(userData.users)) {
+      userData.users.forEach(user => {
+        window.userMap[user.userId] = user.username;
       });
-
-      const result = await response.json();
-      if (result.success) {
-        document.getElementById('login-form').style.display = 'none';
-        document.getElementById('user-info').style.display = 'block';
-        document.getElementById('chat').style.display = 'block';
-        document.getElementById('chat-partners').style.display = 'block';
-
-        document.getElementById('username-display').textContent = result.username;
-        document.getElementById('user-id-display').textContent = result.userId;
-
-        localStorage.setItem('userId', result.userId);
-        localStorage.setItem('username', result.username);
-
-        loadChatPartners();
-      setInterval(() => {
-  if (currentChatTarget) {
-    loadMessages(); // 自动拉取聊天记录
-  }
-}, 3000); // 每 3 秒执行一次
-
-      } else {
-        alert(result.message);
-      }
     }
+
+    // ✅ 2. 加载聊天对象列表（使用 userMap 显示用户名+ID）
+    loadChatPartners();
+
+    // ✅ 3. 开启自动刷新聊天内容
+    setInterval(() => {
+      if (currentChatTarget) {
+        loadMessages();
+      }
+    }, 3000);
+
+  } else {
+    alert(result.message);
+  }
+}
+
 
     function logoutUser() {
       localStorage.removeItem('userId');
@@ -253,7 +268,9 @@ async function addChatPartner() {
 if (result.success && Array.isArray(result.list)) {
   result.list.forEach(partnerId => {
       const li = document.createElement('li');
-      li.textContent = `ID: ${partnerId} `;
+      const username = window.userMap[partnerId] || '未知用户';
+li.textContent = `${username} (ID: ${partnerId}) `;
+
 
       const chatBtn = document.createElement('button');
       chatBtn.textContent = '聊天';
