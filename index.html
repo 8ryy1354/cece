@@ -72,9 +72,11 @@
   </div>
 
   <!-- ✅ 文件上传输入 -->
-  <div class="form-group">
-    <input type="file" id="fileInput">
-  </div>
+<div class="form-group">
+  <label>上传图片/视频：</label>
+  <input type="file" id="media-file">
+</div>
+
 
   <!-- 发送按钮 -->
   <button onclick="sendMessage()">发送</button>
@@ -189,7 +191,7 @@ async function loginUser() {
       document.getElementById('login-form').style.display = 'block';
     }
 
-    async function sendMessage() {
+async function sendMessage() {
   const from = localStorage.getItem('username');
   const to = document.getElementById('partner-id').value || '客服';
   const text = document.getElementById('message').value;
@@ -199,17 +201,53 @@ async function loginUser() {
   let type = 'text';
   let payload = { from, to, type, text };
 
+  let url = null;
+
   if (file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    const uploadRes = await fetch('https://catbox.moe/user/api.php', {
+    const uploadRes = await fetch(`${apiUrl}/upload`, {
       method: 'POST',
-      body: new URLSearchParams({
-        reqtype: 'fileupload',
-        fileToUpload: file
-      })
+      body: formData
     });
+
+    const result = await uploadRes.json();
+
+    if (!result.success) {
+      alert('文件上传失败：' + result.message);
+      return;
+    }
+
+    url = result.url;
+    const mime = file.type;
+    if (mime.startsWith('image/')) {
+      type = 'photo';
+    } else if (mime.startsWith('video/')) {
+      type = 'video';
+    } else {
+      type = 'file'; // 你后面可以扩展支持文件
+    }
+  }
+
+  const res = await fetch(`${apiUrl}/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, type, text, url })
+  });
+
+  const sendResult = await res.json();
+
+  if (sendResult.ok) {
+    alert('消息发送成功');
+    document.getElementById('message').value = '';
+    fileInput.value = '';
+    loadMessages();
+  } else {
+    alert('消息发送失败');
+  }
+}
+
 
     const url = await uploadRes.text();
     const ext = file.name.split('.').pop().toLowerCase();
