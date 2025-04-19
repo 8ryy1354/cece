@@ -57,39 +57,20 @@
     <button onclick="logoutUser()">退出登录</button>
   </div>
 
-<!-- 聊天区域 -->
-<div id="chat" style="display:none; margin-top: 20px;">
-  <h2>发送消息</h2>
-
-  <!-- 接收者 ID 输入 -->
-  <div class="form-group">
-    <input type="text" id="partner-id" placeholder="接收者 ID（可点击聊天对象自动填写）">
+  <!-- 聊天区域 -->
+  <div id="chat" style="display:none; margin-top: 20px;">
+    <h2>发送消息</h2>
+    <div class="form-group">
+      <input type="text" id="partner-id" placeholder="接收者 ID（可点击聊天对象自动填写）">
+    </div>
+    <div class="form-group">
+      <textarea id="message" placeholder="输入消息内容" rows="4" cols="50"></textarea>
+    </div>
+    <button onclick="sendMessage()">发送</button>
   </div>
 
-  <!-- 文本消息输入 -->
-  <div class="form-group">
-    <textarea id="message" placeholder="输入消息内容" rows="4" cols="50"></textarea>
-  </div>
-
-  <!-- ✅ 文件上传输入 -->
-//<div class="form-group">
-//  <label>上传图片/视频：</label>
-//  <input type="file" id="media-file">
-//</div>
-<!-- ✅ 文件上传输入 -->
-<div class="form-group">
-  <label>上传图片/视频：</label>
-  <input type="file" id="fileInput">
-</div>
-
-
-  <!-- 发送按钮 -->
-  <button onclick="sendMessage()">发送</button>
-
-  <!-- ✅ 聊天记录显示区域 -->
+  <!-- ✅ 这里是你要添加的消息容器 -->
   <div id="messages" style="margin-top: 20px;"></div>
-</div>
-
 
   <!-- 聊天对象区域 -->
   <div id="chat-partners" style="display:none; margin-top: 30px;">
@@ -105,17 +86,6 @@
     let currentChatTarget = null; // 当前聊天对象
    const apiUrl = 'https://cece.8ryingye.workers.dev';
     
-
-    function showLogin() {
-      document.getElementById('register-form').style.display = 'none';
-      document.getElementById('login-form').style.display = 'block';
-    }
-
-    function showRegister() {
-      document.getElementById('register-form').style.display = 'block';
-      document.getElementById('login-form').style.display = 'none';
-    }
-
     async function registerUser() {
       const username = document.getElementById('register-username').value;
       const password = document.getElementById('register-password').value;
@@ -135,7 +105,15 @@
       }
     }
 
+    function showLogin() {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
 
+    function showRegister() {
+      document.getElementById('register-form').style.display = 'block';
+      document.getElementById('login-form').style.display = 'none';
+    }
 
 async function loginUser() {
   const username = document.getElementById('login-username').value;
@@ -196,121 +174,26 @@ async function loginUser() {
       document.getElementById('login-form').style.display = 'block';
     }
 
-async function sendMessage() {
-  const from = localStorage.getItem('username');
-  const to = document.getElementById('partner-id').value || '客服';
-  const text = document.getElementById('message').value;
-  const fileInput = document.getElementById('media-file'); // ✅ 确保 ID 一致
-  const file = fileInput.files[0];
+    async function sendMessage() {
+      const from = localStorage.getItem('username');
+      const to = document.getElementById('partner-id').value || '客服';
+      const text = document.getElementById('message').value;
 
-  let type = 'text';
-  let url = null;
+      const response = await fetch(`${apiUrl}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to, type: 'text', text })
+      });
 
-  if (file) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const uploadRes = await fetch(`${apiUrl}/upload`, {
-      method: 'POST',
-      body: formData
-    });
-
-    const result = await uploadRes.json();
-    if (!result.success) {
-      alert('文件上传失败：' + result.message);
-      return;
-    }
-
-    url = result.url;
-    const mime = file.type;
-    if (mime.startsWith('image/')) {
-      type = 'photo';
-    } else if (mime.startsWith('video/')) {
-      type = 'video';
-    } else {
-      type = 'file';
-    }
-  }
-
-  const res = await fetch(`${apiUrl}/send`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, type, text, url })
-  });
-
-  const sendResult = await res.json();
-
-  if (res.ok && sendResult.ok) {
-    alert('消息发送成功');
-    document.getElementById('message').value = '';
-    fileInput.value = '';
-    loadMessages(); // ✅ 自动刷新消息
-  } else {
-    alert('消息发送失败');
-  }
+const result = await response.json();
+if (result.ok) {
+  alert('消息发送成功');
+  document.getElementById('message').value = '';
+  loadMessages(); // ✅ 添加这一行，刷新聊天记录
+} else {
+  alert('消息发送失败');
 }
-
-
-
-    url = result.url;
-    const mime = file.type;
-    if (mime.startsWith('image/')) {
-      type = 'photo';
-    } else if (mime.startsWith('video/')) {
-      type = 'video';
-    } else {
-      type = 'file'; // 你后面可以扩展支持文件
-    }
-  }
-
-  const res = await fetch(`${apiUrl}/send`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, type, text, url })
-  });
-
-  const sendResult = await res.json();
-
-  if (sendResult.ok) {
-    alert('消息发送成功');
-    document.getElementById('message').value = '';
-    fileInput.value = '';
-    loadMessages();
-  } else {
-    alert('消息发送失败');
-  }
 }
-
-
-
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-      type = 'photo';
-    } else if (['mp4', 'webm'].includes(ext)) {
-      type = 'video';
-    } else {
-      type = 'document';
-    }
-
-    payload = { from, to, type, url };
-  }
-
-  const response = await fetch(`${apiUrl}/send`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  const result = await response.json();
-  if (result.ok) {
-    alert('消息发送成功');
-    document.getElementById('message').value = '';
-    fileInput.value = '';
-    loadMessages();
-  } else {
-    alert('消息发送失败');
-  }
-}
-
 
 async function loadMessages() {
   const userId = localStorage.getItem('userId');
