@@ -200,11 +200,10 @@ async function sendMessage() {
   const from = localStorage.getItem('username');
   const to = document.getElementById('partner-id').value || '客服';
   const text = document.getElementById('message').value;
-  const fileInput = document.getElementById('fileInput');
+  const fileInput = document.getElementById('media-file'); // ✅ 确保 ID 一致
   const file = fileInput.files[0];
 
   let type = 'text';
-  let payload = { from, to, type, text };
   let url = null;
 
   if (file) {
@@ -241,15 +240,16 @@ async function sendMessage() {
 
   const sendResult = await res.json();
 
-  if (sendResult.ok) {
+  if (res.ok && sendResult.ok) {
     alert('消息发送成功');
     document.getElementById('message').value = '';
     fileInput.value = '';
-    loadMessages();
+    loadMessages(); // ✅ 自动刷新消息
   } else {
     alert('消息发送失败');
   }
 }
+
 
 
     url = result.url;
