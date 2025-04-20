@@ -67,15 +67,7 @@
       <textarea id="message" placeholder="输入消息内容" rows="4" cols="50"></textarea>
     </div>
     <button onclick="sendMessage()">发送</button>
-    <!-- ✅ 文件上传输入 -->
-<div class="form-group">
-  <label>上传文件：</label>
-  <input type="file" id="fileInput">
-</div>
   </div>
-
-
-
 
   <!-- ✅ 这里是你要添加的消息容器 -->
   <div id="messages" style="margin-top: 20px;"></div>
@@ -182,74 +174,35 @@ async function loginUser() {
       document.getElementById('login-form').style.display = 'block';
     }
 
- async function sendMessage() {
-  const from = localStorage.getItem('username');
-  const to = document.getElementById('partner-id').value || '客服';
-  const text = document.getElementById('message').value;
-  const fileInput = document.getElementById('fileInput');
-  const file = fileInput?.files[0];
+    async function sendMessage() {
+      const from = localStorage.getItem('username');
+      const to = document.getElementById('partner-id').value || '客服';
+      const text = document.getElementById('message').value;
 
-  let type = 'text';
-  let url = null;
-
-  // ✅ 文件上传逻辑（直接上传到 Catbox）
-  if (file) {
-    const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('fileToUpload', file);
-
-    try {
-      const uploadRes = await fetch('https://catbox.moe/user/api.php', {
+      const response = await fetch(`${apiUrl}/send`, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to, type: 'text', text })
       });
 
-      const resultUrl = await uploadRes.text();
-
-      if (!resultUrl.startsWith('https://')) {
-        alert('文件上传失败：' + resultUrl);
-        return;
-      }
-
-      url = resultUrl;
-      const mime = file.type;
-
-      if (mime.startsWith('image/')) {
-        type = 'photo';
-      } else if (mime.startsWith('video/')) {
-        type = 'video';
-      } else {
-        type = 'file';
-      }
-    } catch (err) {
-      alert('文件上传失败：' + err.message);
-      return;
-    }
-  }
-
-  // ✅ 发送消息到 Worker 的 /send 接口
-  const res = await fetch(`${apiUrl}/send`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, type, text, url })
-  });
-
-  const sendResult = await res.json();
-  if (sendResult.ok) {
-    alert('消息发送成功');
-    document.getElementById('message').value = '';
-    if (fileInput) fileInput.value = '';
-    loadMessages();
-  } else {
-    alert('消息发送失败');
-  }
+const result = await response.json();
+if (result.ok) {
+  alert('消息发送成功');
+  document.getElementById('message').value = '';
+  loadMessages(); // ✅ 添加这一行，刷新聊天记录
+} else {
+  alert('消息发送失败');
 }
-
+}
 
 async function loadMessages() {
   const userId = localStorage.getItem('userId');
   const partnerId = currentChatTarget || document.getElementById('partner-id').value;
-  if (!userId || !partnerId) return;
+
+  if (!userId || !partnerId) {
+    console.error("用户ID或聊天对象ID为空");
+    return;
+  }
 
   const response = await fetch(`${apiUrl}/get-messages`, {
     method: 'POST',
@@ -265,40 +218,13 @@ async function loadMessages() {
     result.messages.forEach(msg => {
       const div = document.createElement('div');
       div.className = 'message';
-
-      const header = document.createElement('div');
-      header.textContent = `[${msg.from} ➜ ${msg.to}]`;
-
-      div.appendChild(header);
-
-      if (msg.type === 'text') {
-        div.appendChild(document.createTextNode(msg.text));
-      } else if (msg.type === 'photo') {
-        const img = document.createElement('img');
-        img.src = msg.url;
-        img.style.maxWidth = '100%';
-        div.appendChild(img);
-      } else if (msg.type === 'video') {
-        const video = document.createElement('video');
-        video.src = msg.url;
-        video.controls = true;
-        video.style.maxWidth = '100%';
-        div.appendChild(video);
-      } else if (msg.type === 'file') {
-        const link = document.createElement('a');
-        link.href = msg.url;
-        link.textContent = '点击下载文件';
-        link.target = '_blank';
-        div.appendChild(link);
-      }
-
+      div.textContent = `[${msg.from} ➜ ${msg.to}] ${msg.text}`;
       container.appendChild(div);
     });
   } else {
     container.innerHTML = '<p>暂无消息</p>';
   }
 }
-
 
 
 
