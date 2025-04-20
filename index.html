@@ -3,197 +3,301 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>聊天界面</title>
+  <title>聊天室</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
-  <div class="h-screen flex">
-    <!-- 联系人列表 -->
-    <div class="w-1/4 bg-white shadow-lg overflow-y-auto">
-      <div class="p-4 border-b font-bold text-lg">联系人</div>
-      <ul id="partner-list" class="p-2 space-y-2">
-        <!-- JS 添加联系人项 -->
-      </ul>
-      <div class="p-4 border-t">
-        <input type="text" id="add-partner-id" placeholder="输入用户 ID 添加" class="w-full p-2 border rounded mb-2">
-        <button onclick="addChatPartner()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">添加</button>
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4 text-center">欢迎来到聊天室</h1>
+
+    <!-- 注册表单 -->
+    <div id="register-form" class="max-w-md mx-auto bg-white shadow rounded p-4">
+      <h2 class="text-xl font-semibold mb-2">注册</h2>
+      <div class="mb-2">
+        <input type="text" id="register-username" placeholder="用户名" class="w-full p-2 border rounded">
       </div>
+      <div class="mb-2">
+        <input type="password" id="register-password" placeholder="密码" class="w-full p-2 border rounded">
+      </div>
+      <button onclick="registerUser()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">注册</button>
+      <p class="text-sm mt-2">已有账号？<a href="#" onclick="showLogin()" class="text-blue-500 underline">去登录</a></p>
+    </div>
+
+    <!-- 登录表单 -->
+    <div id="login-form" class="max-w-md mx-auto bg-white shadow rounded p-4 hidden">
+      <h2 class="text-xl font-semibold mb-2">登录</h2>
+      <div class="mb-2">
+        <input type="text" id="login-username" placeholder="用户名" class="w-full p-2 border rounded">
+      </div>
+      <div class="mb-2">
+        <input type="password" id="login-password" placeholder="密码" class="w-full p-2 border rounded">
+      </div>
+      <button onclick="loginUser()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">登录</button>
+      <p class="text-sm mt-2">没有账号？<a href="#" onclick="showRegister()" class="text-green-600 underline">去注册</a></p>
+    </div>
+
+    <!-- 登录成功后的用户信息 -->
+    <div id="user-info" class="max-w-2xl mx-auto bg-white shadow rounded p-4 hidden">
+      <h2 class="text-xl font-semibold">欢迎，<span id="username-display"></span>（ID: <span id="user-id-display"></span>）</h2>
+      <button onclick="logoutUser()" class="mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded">退出登录</button>
     </div>
 
     <!-- 聊天区域 -->
-    <div class="flex-1 flex flex-col">
-      <!-- 顶部 -->
-      <div class="bg-white shadow p-4 border-b flex justify-between items-center">
-        <div>
-          聊天对象：<span id="partner-id-display" class="font-bold">请选择联系人</span>
-        </div>
-        <button onclick="logoutUser()" class="text-red-500">退出登录</button>
+    <div id="chat" class="max-w-2xl mx-auto bg-white shadow rounded p-4 mt-6 hidden">
+      <h2 class="text-xl font-semibold mb-2">发送消息</h2>
+      <div class="mb-2">
+        <input type="text" id="partner-id" placeholder="接收者 ID（可点击聊天对象自动填写）" class="w-full p-2 border rounded">
       </div>
+      <div class="mb-2">
+        <textarea id="message" placeholder="输入消息内容" rows="4" class="w-full p-2 border rounded"></textarea>
+      </div>
+      <button onclick="sendMessage()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">发送</button>
+    </div>
 
-      <!-- 消息区 -->
-      <div id="messages" class="flex-1 p-4 overflow-y-auto space-y-2">
-        <!-- JS 填充消息 -->
-      </div>
+    <!-- 消息容器 -->
+    <div id="messages" class="max-w-2xl mx-auto bg-white shadow rounded p-4 mt-4 space-y-2"></div>
 
-      <!-- 发送消息 -->
-      <div class="p-4 bg-white border-t flex items-center space-x-2">
-        <textarea id="message" rows="2" placeholder="输入消息..." class="flex-1 p-2 border rounded resize-none"></textarea>
-        <button onclick="sendMessage()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">发送</button>
+    <!-- 聊天对象区域 -->
+    <div id="chat-partners" class="max-w-2xl mx-auto bg-white shadow rounded p-4 mt-6 hidden">
+      <h2 class="text-xl font-semibold mb-2">聊天对象</h2>
+      <div class="mb-2 flex gap-2">
+        <input type="text" id="add-partner-id" placeholder="输入用户 ID 添加聊天对象" class="flex-1 p-2 border rounded">
+        <button onclick="addChatPartner()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">添加</button>
       </div>
+      <ul id="partner-list" class="space-y-2"></ul>
     </div>
   </div>
 
   <script>
-    let currentChatTarget = null;
-    const apiUrl = 'https://cece.8ryingye.workers.dev';
-
+  let currentChatTarget = null; // 当前聊天对象
+   const apiUrl = 'https://cece.8ryingye.workers.dev';
+    
     async function registerUser() {
-      const username = document.getElementById('register-username')?.value;
-      const password = document.getElementById('register-password')?.value;
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
+
       const response = await fetch(`${apiUrl}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      const result = await response.json();
-      alert(result.success ? '注册成功，请登录' : result.message);
-    }
 
-    async function loginUser() {
-      const username = document.getElementById('login-username').value;
-      const password = document.getElementById('login-password').value;
-      const response = await fetch(`${apiUrl}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
       const result = await response.json();
       if (result.success) {
-        localStorage.setItem('userId', result.userId);
-        localStorage.setItem('username', result.username);
-        window.userMap = {};
-        const userRes = await fetch(`${apiUrl}/get-users`, { method: 'POST' });
-        const userData = await userRes.json();
-        if (userData.success && Array.isArray(userData.users)) {
-          userData.users.forEach(user => window.userMap[user.userId] = user.username);
-        }
-        loadChatPartners();
-        setInterval(() => { if (currentChatTarget) loadMessages(); }, 3000);
+        alert('注册成功，请登录');
+        showLogin();
       } else {
         alert(result.message);
       }
     }
 
+    function showLogin() {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
+
+    function showRegister() {
+      document.getElementById('register-form').style.display = 'block';
+      document.getElementById('login-form').style.display = 'none';
+    }
+
+async function loginUser() {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+
+  const response = await fetch(`${apiUrl}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('user-info').style.display = 'block';
+    document.getElementById('chat').style.display = 'block';
+    document.getElementById('chat-partners').style.display = 'block';
+
+    document.getElementById('username-display').textContent = result.username;
+    document.getElementById('user-id-display').textContent = result.userId;
+
+    localStorage.setItem('userId', result.userId);
+    localStorage.setItem('username', result.username);
+
+    // ✅ 1. 获取所有用户并保存为 userMap（用于显示用户名）
+    window.userMap = {};
+    const userRes = await fetch(`${apiUrl}/get-users`, { method: 'POST' });
+    const userData = await userRes.json();
+    if (userData.success && Array.isArray(userData.users)) {
+      userData.users.forEach(user => {
+        window.userMap[user.userId] = user.username;
+      });
+    }
+
+    // ✅ 2. 加载聊天对象列表（使用 userMap 显示用户名+ID）
+    loadChatPartners();
+
+    // ✅ 3. 开启自动刷新聊天内容
+    setInterval(() => {
+      if (currentChatTarget) {
+        loadMessages();
+      }
+    }, 3000);
+
+  } else {
+    alert(result.message);
+  }
+}
+
+
     function logoutUser() {
-      localStorage.clear();
-      location.reload();
+      localStorage.removeItem('userId');
+      localStorage.removeItem('username');
+      document.getElementById('user-info').style.display = 'none';
+      document.getElementById('chat').style.display = 'none';
+      document.getElementById('chat-partners').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
     }
 
     async function sendMessage() {
       const from = localStorage.getItem('username');
-      const to = currentChatTarget;
+      const to = document.getElementById('partner-id').value || '客服';
       const text = document.getElementById('message').value;
+
       const response = await fetch(`${apiUrl}/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ from, to, type: 'text', text })
       });
-      const result = await response.json();
-      if (result.ok) {
-        document.getElementById('message').value = '';
-        loadMessages();
-      } else {
-        alert('消息发送失败');
-      }
-    }
 
-    async function loadMessages() {
-      const userId = localStorage.getItem('userId');
-      const partnerId = currentChatTarget;
-      if (!userId || !partnerId) return;
-      const response = await fetch(`${apiUrl}/get-messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, partnerId })
-      });
-      const result = await response.json();
-      const container = document.getElementById('messages');
-      container.innerHTML = '';
-      if (result.success && Array.isArray(result.messages)) {
-        result.messages.forEach(msg => {
-          const div = document.createElement('div');
-          div.className = `max-w-[70%] px-4 py-2 rounded shadow ${msg.from === localStorage.getItem('username') ? 'bg-blue-100 self-end text-right ml-auto' : 'bg-gray-200 self-start'}`;
-          div.textContent = `${msg.from}: ${msg.text}`;
-          container.appendChild(div);
-        });
-      } else {
-        container.innerHTML = '<p>暂无消息</p>';
-      }
-    }
+const result = await response.json();
+if (result.ok) {
+  alert('消息发送成功');
+  document.getElementById('message').value = '';
+  loadMessages(); // ✅ 添加这一行，刷新聊天记录
+} else {
+  alert('消息发送失败');
+}
+}
 
-    async function addChatPartner() {
-      const userId = localStorage.getItem('userId');
-      const targetId = document.getElementById('add-partner-id').value;
-      const response = await fetch(`${apiUrl}/add-chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, targetId })
-      });
-      const result = await response.json();
-      alert(result.success ? '添加成功' : '添加失败：' + result.message);
-      if (result.success) loadChatPartners();
-    }
+async function loadMessages() {
+  const userId = localStorage.getItem('userId');
+  const partnerId = currentChatTarget || document.getElementById('partner-id').value;
 
-    async function deleteChatPartner(partnerId) {
-      const userId = localStorage.getItem('userId');
-      const response = await fetch(`${apiUrl}/delete-chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, targetId: partnerId })
-      });
-      const result = await response.json();
-      alert(result.success ? '删除成功' : (result.message || '删除失败'));
-      if (result.success) loadChatPartners();
-    }
+  if (!userId || !partnerId) {
+    console.error("用户ID或聊天对象ID为空");
+    return;
+  }
+
+  const response = await fetch(`${apiUrl}/get-messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, partnerId })
+  });
+
+  const result = await response.json();
+  const container = document.getElementById('messages');
+  container.innerHTML = '';
+
+  if (result.success && Array.isArray(result.messages)) {
+    result.messages.forEach(msg => {
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.textContent = `[${msg.from} ➜ ${msg.to}] ${msg.text}`;
+      container.appendChild(div);
+    });
+  } else {
+    container.innerHTML = '<p>暂无消息</p>';
+  }
+}
+
+
+
+// 添加聊天对象
+async function addChatPartner() {
+  const userId = localStorage.getItem('userId');
+  const targetId = document.getElementById('add-partner-id').value;
+
+  const response = await fetch(`${apiUrl}/add-chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, targetId }),
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    alert('添加成功');
+    loadChatPartners();
+  } else {
+    alert('添加失败：' + result.message);
+  }
+}
+
+
 
     async function loadChatPartners() {
-      const userId = localStorage.getItem('userId');
-      const list = document.getElementById('partner-list');
-      list.innerHTML = '';
-      const response = await fetch(`${apiUrl}/get-chats`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
-      const result = await response.json();
-      if (result.success && Array.isArray(result.list)) {
-        result.list.forEach(partnerId => {
-          const li = document.createElement('li');
-          li.className = 'flex justify-between items-center border p-2 rounded hover:bg-gray-100';
-          const username = window.userMap?.[partnerId] || '未知用户';
-          li.innerHTML = `<div>${username} (ID: ${partnerId})</div>`;
-          const btnGroup = document.createElement('div');
-          const chatBtn = document.createElement('button');
-          chatBtn.textContent = '聊天';
-          chatBtn.className = 'text-blue-500 hover:underline mr-2';
-          chatBtn.onclick = () => {
-            currentChatTarget = partnerId;
-            document.getElementById('partner-id-display').textContent = `${username} (${partnerId})`;
-            loadMessages();
-          };
-          const delBtn = document.createElement('button');
-          delBtn.textContent = '删除';
-          delBtn.className = 'text-red-500 hover:underline';
-          delBtn.onclick = () => deleteChatPartner(partnerId);
-          btnGroup.appendChild(chatBtn);
-          btnGroup.appendChild(delBtn);
-          li.appendChild(btnGroup);
-          list.appendChild(li);
-        });
-      } else {
-        alert(result.message || '获取聊天对象失败');
-      }
-    }
+  const userId = localStorage.getItem('userId');
+  const list = document.getElementById('partner-list');
+  list.innerHTML = '';
+
+  const response = await fetch(`${apiUrl}/get-chats`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ userId })
+  });
+
+  const result = await response.json();
+
+if (result.success && Array.isArray(result.list)) {
+  result.list.forEach(partnerId => {
+      const li = document.createElement('li');
+      const username = window.userMap[partnerId] || '未知用户';
+li.textContent = `${username} (ID: ${partnerId}) `;
+
+
+      const chatBtn = document.createElement('button');
+      chatBtn.textContent = '聊天';
+      chatBtn.style.marginLeft = '10px';
+chatBtn.onclick = () => {
+  document.getElementById('partner-id').value = partnerId;
+  currentChatTarget = partnerId; // ✅ 设置当前聊天对象
+  loadMessages();
+};
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '删除';
+      delBtn.style.marginLeft = '10px';
+      delBtn.onclick = () => deleteChatPartner(partnerId);
+
+      li.appendChild(chatBtn);
+      li.appendChild(delBtn);
+      list.appendChild(li);
+    });
+  } else {
+    alert(result.message || '获取聊天对象失败');
+  }
+}
+
+
+async function deleteChatPartner(partnerId) {
+  const userId = localStorage.getItem('userId');
+  const response = await fetch(`${apiUrl}/delete-chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, targetId: partnerId })
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    alert('删除成功');
+    loadChatPartners();
+  } else {
+    alert(result.message || '删除失败');
+  }
+}
   </script>
 </body>
 </html>
