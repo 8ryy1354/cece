@@ -43,23 +43,25 @@
     </div>
 
     <!-- 聊天区域 -->
-    <div id="chat" class="max-w-2xl mx-auto bg-white shadow rounded p-4 mt-6 hidden flex flex-col h-[500px]">
-      <h2 class="text-xl font-semibold mb-2">聊天</h2>
-      <div class="mb-2">
+    <div id="chat" class="max-w-2xl mx-auto bg-white shadow rounded p-4 mt-6 hidden flex flex-col space-y-4">
+      <h2 class="text-xl font-semibold">聊天</h2>
+
+      <!-- 接收者 ID -->
+      <div>
         <input type="text" id="partner-id" placeholder="接收者 ID（可点击聊天对象自动填写）" class="w-full p-2 border rounded">
       </div>
 
       <!-- 消息容器 -->
-      <div id="messages" class="flex-1 overflow-y-auto p-2 border rounded bg-gray-50 space-y-2"></div>
+      <div id="messages" class="max-h-[300px] overflow-y-auto p-2 border rounded bg-gray-50 space-y-2"></div>
 
       <!-- 聊天输入 -->
-      <div class="mt-2">
+      <div>
         <textarea id="message" placeholder="输入消息内容" rows="3" class="w-full p-2 border rounded resize-none"></textarea>
         <button onclick="sendMessage()" class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">发送</button>
       </div>
     </div>
 
-    <!-- 聊天对象区域 -->
+    <!-- 聊天对象区域（独立） -->
     <div id="chat-partners" class="max-w-2xl mx-auto bg-white shadow rounded p-4 mt-6 hidden">
       <h2 class="text-xl font-semibold mb-2">聊天对象</h2>
       <div class="mb-2 flex gap-2">
