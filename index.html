@@ -182,7 +182,7 @@ async function loginUser() {
       document.getElementById('login-form').style.display = 'block';
     }
 
-    async function sendMessage() {
+ async function sendMessage() {
   const from = localStorage.getItem('username');
   const to = document.getElementById('partner-id').value || '客服';
   const text = document.getElementById('message').value;
@@ -192,33 +192,42 @@ async function loginUser() {
   let type = 'text';
   let url = null;
 
-  // ✅ 处理上传文件
+  // ✅ 文件上传逻辑（直接上传到 Catbox）
   if (file) {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('reqtype', 'fileupload');
+    formData.append('fileToUpload', file);
 
-    const uploadRes = await fetch(`${apiUrl}/upload`, {
-      method: 'POST',
-      body: formData
-    });
+    try {
+      const uploadRes = await fetch('https://catbox.moe/user/api.php', {
+        method: 'POST',
+        body: formData,
+      });
 
-    const result = await uploadRes.json();
-    if (!result.success) {
-      alert('文件上传失败：' + result.message);
+      const resultUrl = await uploadRes.text();
+
+      if (!resultUrl.startsWith('https://')) {
+        alert('文件上传失败：' + resultUrl);
+        return;
+      }
+
+      url = resultUrl;
+      const mime = file.type;
+
+      if (mime.startsWith('image/')) {
+        type = 'photo';
+      } else if (mime.startsWith('video/')) {
+        type = 'video';
+      } else {
+        type = 'file';
+      }
+    } catch (err) {
+      alert('文件上传失败：' + err.message);
       return;
-    }
-
-    url = result.url;
-    const mime = file.type;
-    if (mime.startsWith('image/')) {
-      type = 'photo';
-    } else if (mime.startsWith('video/')) {
-      type = 'video';
-    } else {
-      type = 'file';
     }
   }
 
+  // ✅ 发送消息到 Worker 的 /send 接口
   const res = await fetch(`${apiUrl}/send`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
