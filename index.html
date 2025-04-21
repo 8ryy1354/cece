@@ -97,7 +97,7 @@
       }
     });
 
-    async function loadMessages() {
+ async function loadMessages() {
   const userId = localStorage.getItem('userId');
   const partnerId = currentChatTarget || document.getElementById('partner-id').value;
 
@@ -128,7 +128,6 @@
 
   container.scrollTop = container.scrollHeight;
 }
-    }
 
   <script>
   let currentChatTarget = null; // 当前聊天对象
