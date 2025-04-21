@@ -186,6 +186,9 @@ if (result.ok) {
 }
 
 async function loadMessages() {
+  console.log("本地用户名：", localStorage.getItem('username'));
+console.log("聊天记录：", result.messages);
+
   const userId = localStorage.getItem('userId');
   const partnerId = currentChatTarget || document.getElementById('partner-id').value;
 
