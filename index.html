@@ -74,6 +74,7 @@
 
   <script>
   let currentChatTarget = null; // 当前聊天对象
+window.unreadCounts = {}; // 用于记录每个聊天对象的未读消息数
    const apiUrl = 'https://cece.8ryingye.workers.dev';
     
     async function registerUser() {
@@ -151,6 +152,25 @@ async function loginUser() {
 
   } else {
     alert(result.message);
+  }
+}
+
+setInterval(loadUnreadCounts, 3000); // 每 3 秒获取未读消息数量
+
+async function loadUnreadCounts() {
+  const userId = localStorage.getItem('userId');
+  if (!userId) return;
+
+  const response = await fetch(`${apiUrl}/get-unread`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    window.unreadCounts = result.unread || {};
+    updatePartnerListUI(); // 更新 UI 红点
   }
 }
 
@@ -272,53 +292,24 @@ async function addChatPartner() {
   }
 }
 
-
-
-    async function loadChatPartners() {
+async function loadChatPartners() {
   const userId = localStorage.getItem('userId');
-  const list = document.getElementById('partner-list');
-  list.innerHTML = '';
 
   const response = await fetch(`${apiUrl}/get-chats`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId })
   });
 
   const result = await response.json();
 
-if (result.success && Array.isArray(result.list)) {
-  result.list.forEach(partnerId => {
-      const li = document.createElement('li');
-      const username = window.userMap[partnerId] || '未知用户';
-li.textContent = `${username} (ID: ${partnerId}) `;
-
-
-      const chatBtn = document.createElement('button');
-      chatBtn.textContent = '聊天';
-      chatBtn.style.marginLeft = '10px';
-chatBtn.onclick = () => {
-  document.getElementById('partner-id').value = partnerId;
-  currentChatTarget = partnerId; // ✅ 设置当前聊天对象
-  loadMessages();
-};
-
-      const delBtn = document.createElement('button');
-      delBtn.textContent = '删除';
-      delBtn.style.marginLeft = '10px';
-      delBtn.onclick = () => deleteChatPartner(partnerId);
-
-      li.appendChild(chatBtn);
-      li.appendChild(delBtn);
-      list.appendChild(li);
-    });
+  if (result.success && Array.isArray(result.list)) {
+    window.chatPartnerList = result.list; // ✅ 保存聊天对象 ID
+    updatePartnerListUI(); // ✅ 渲染列表
   } else {
     alert(result.message || '获取聊天对象失败');
   }
 }
-
 
 async function deleteChatPartner(partnerId) {
   const userId = localStorage.getItem('userId');
@@ -336,6 +327,54 @@ async function deleteChatPartner(partnerId) {
     alert(result.message || '删除失败');
   }
 }
+function updatePartnerListUI() {
+  const list = document.getElementById('partner-list');
+  list.innerHTML = '';
+
+  const userMap = window.userMap || {};
+  const unread = window.unreadCounts || {};
+  const partnerIds = window.chatPartnerList || [];
+
+  partnerIds.forEach(partnerId => {
+    const username = userMap[partnerId] || '未知用户';
+    const count = unread[partnerId] || 0;
+
+    const li = document.createElement('li');
+    li.className = 'flex items-center justify-between';
+
+    const label = document.createElement('span');
+    label.innerHTML = `${username} (ID: ${partnerId})`;
+
+    // 🔴 红点提醒
+    if (count > 0) {
+      const dot = document.createElement('span');
+      dot.className = 'inline-block w-2 h-2 bg-red-500 rounded-full ml-2';
+      label.appendChild(dot);
+    }
+
+    const chatBtn = document.createElement('button');
+    chatBtn.textContent = '聊天';
+    chatBtn.className = 'ml-2 text-blue-600';
+    chatBtn.onclick = () => {
+      document.getElementById('partner-id').value = partnerId;
+      currentChatTarget = partnerId;
+      window.unreadCounts[partnerId] = 0; // 清除未读
+      loadMessages();
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '删除';
+    delBtn.className = 'ml-2 text-red-600';
+    delBtn.onclick = () => deleteChatPartner(partnerId);
+
+    li.appendChild(label);
+    li.appendChild(chatBtn);
+    li.appendChild(delBtn);
+    list.appendChild(li);
+  });
+}
+
+
   </script>
 </body>
 </html>
