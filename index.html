@@ -73,6 +73,18 @@
   </div>
 
   <script>
+
+function showLogin() {
+  document.getElementById('register-form').classList.add('hidden');
+  document.getElementById('login-form').classList.remove('hidden');
+}
+
+function showRegister() {
+  document.getElementById('login-form').classList.add('hidden');
+  document.getElementById('register-form').classList.remove('hidden');
+}
+
+    
     const messageInput = document.getElementById('message');
     messageInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.ctrlKey) {
