@@ -74,6 +74,7 @@
 
   <script>
   let currentChatTarget = null; // 当前聊天对象
+const notifySound = new Audio("https://8ryy1354.github.io/cece/xm3463.mp3");
 window.unreadCounts = {}; // 用于记录每个聊天对象的未读消息数
    const apiUrl = 'https://cece.8ryingye.workers.dev';
     
@@ -179,12 +180,24 @@ async function loadUnreadCounts() {
   const result = await response.json();
   console.log("[📥] 后端返回未读消息数据:", result);
 
+  const oldUnread = { ...window.unreadCounts };
+
   if (result.success) {
     window.unreadCounts = result.unread || {};
     console.log("[📊] 更新 window.unreadCounts 为:", window.unreadCounts);
-    updatePartnerListUI(); // ✅ 调用 UI 更新函数
+
+    // ✅ 如果新未读消息数量增加，播放提示音
+    for (const id in window.unreadCounts) {
+      if ((window.unreadCounts[id] || 0) > (oldUnread[id] || 0)) {
+        notifySound.play(); // 🔊 播放提示音
+        break;
+      }
+    }
+
+    updatePartnerListUI(); // ✅ 刷新聊天对象列表
   }
 }
+
 
 
     function logoutUser() {
@@ -262,8 +275,10 @@ async function loadMessages() {
 function formatTime(ts) {
   if (!ts) return '';
   const date = new Date(ts);
-  return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} `
+       + `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
+
 
 // ✅ 工具函数：格式化消息
 function formatMessage(msg) {
