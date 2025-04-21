@@ -197,7 +197,7 @@ async function loadUnreadCounts() {
     }
 
     async function sendMessage() {
-      const from = localStorage.getItem('username');
+      const from = localStorage.getItem('userId'); // ✅ 发送者ID必须是userId
       const to = document.getElementById('partner-id').value || '客服';
       const text = document.getElementById('message').value;
 
