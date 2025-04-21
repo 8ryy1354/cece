@@ -52,7 +52,7 @@
       </div>
 
       <!-- 消息容器 -->
-      <div id="messages" class="max-h-[300px] overflow-y-auto p-2 border rounded bg-gray-50 space-y-2"></div>
+      <div id="messages" class="flex flex-col max-h-[300px] overflow-y-auto p-2 border rounded bg-gray-50 space-y-2"></div>
 
       <!-- 聊天输入 -->
       <div>
@@ -205,12 +205,29 @@ async function loadMessages() {
   container.innerHTML = '';
 
   if (result.success && Array.isArray(result.messages)) {
-    result.messages.forEach(msg => {
-      const div = document.createElement('div');
-      div.className = 'message';
-      div.textContent = `[${msg.from} ➜ ${msg.to}] ${msg.text}`;
-      container.appendChild(div);
-    });
+result.messages.forEach(msg => {
+  const div = document.createElement('div');
+
+  const isMe = msg.from === localStorage.getItem('username');
+  div.className = `p-2 rounded max-w-[80%] ${isMe ? 'bg-blue-100 self-end text-right ml-auto' : 'bg-gray-200 self-start mr-auto'}`;
+
+  const time = new Date(msg.timestamp || Date.now()).toLocaleTimeString(); // 时间戳格式
+  const content = msg.type === 'text'
+    ? msg.text
+    : msg.type === 'photo'
+      ? `<img src="${msg.url}" alt="图片" class="max-w-[200px] rounded">`
+      : msg.type === 'video'
+        ? `<video src="${msg.url}" controls class="max-w-[200px] rounded"></video>`
+        : `<a href="${msg.url}" target="_blank" class="text-blue-600 underline">点击查看文件</a>`;
+
+  div.innerHTML = `
+    <div class="text-sm font-semibold">${msg.from}</div>
+    <div class="my-1">${content}</div>
+    <div class="text-xs text-gray-500">${time}</div>
+  `;
+  container.appendChild(div);
+});
+
   } else {
     container.innerHTML = '<p>暂无消息</p>';
   }
