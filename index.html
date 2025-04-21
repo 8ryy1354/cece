@@ -166,6 +166,8 @@ async function loginUser() {
 
 async function loadUnreadCounts() {
   const userId = localStorage.getItem('userId');
+  console.log("[🔁] 正在检查未读消息... 用户ID:", userId);
+
   if (!userId) return;
 
   const response = await fetch(`${apiUrl}/get-unread`, {
@@ -175,9 +177,12 @@ async function loadUnreadCounts() {
   });
 
   const result = await response.json();
+  console.log("[📥] 后端返回未读消息数据:", result);
+
   if (result.success) {
     window.unreadCounts = result.unread || {};
-    updatePartnerListUI(); // 更新 UI 红点
+    console.log("[📊] 更新 window.unreadCounts 为:", window.unreadCounts);
+    updatePartnerListUI(); // ✅ 调用 UI 更新函数
   }
 }
 
@@ -335,6 +340,8 @@ async function deleteChatPartner(partnerId) {
   }
 }
 function updatePartnerListUI() {
+  console.log("[🖌] 正在刷新聊天对象列表...");
+
   const list = document.getElementById('partner-list');
   list.innerHTML = '';
 
@@ -345,6 +352,8 @@ function updatePartnerListUI() {
   partnerIds.forEach(partnerId => {
     const username = userMap[partnerId] || '未知用户';
     const count = unread[partnerId] || 0;
+
+    console.log(`[🔄] 渲染聊天对象: ${partnerId}（${username}） 未读数: ${count}`);
 
     const li = document.createElement('li');
     li.className = 'flex items-center justify-between';
