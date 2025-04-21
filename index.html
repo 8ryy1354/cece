@@ -52,11 +52,11 @@
       </div>
 
       <!-- 消息容器 -->
-      <div id="messages" class="max-h-[300px] overflow-y-auto p-2 border rounded bg-gray-50 space-y-2"></div>
+      <div id="messages" class="max-h-[300px] overflow-y-auto p-2 border rounded bg-gray-50 space-y-2 flex flex-col"></div>
 
       <!-- 聊天输入 -->
       <div>
-        <textarea id="message" placeholder="输入消息内容" rows="3" class="w-full p-2 border rounded resize-none"></textarea>
+        <textarea id="message" placeholder="输入消息内容 (Enter发送, Ctrl+Enter换行)" rows="3" class="w-full p-2 border rounded resize-none"></textarea>
         <button onclick="sendMessage()" class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">发送</button>
       </div>
     </div>
@@ -72,6 +72,52 @@
     </div>
   </div>
 
+  <script>
+    const messageInput = document.getElementById('message');
+    messageInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.ctrlKey) {
+        e.preventDefault();
+        sendMessage();
+      } else if (e.key === 'Enter' && e.ctrlKey) {
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + "\n" + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 1;
+        e.preventDefault();
+      }
+    });
+
+    async function loadMessages() {
+      const userId = localStorage.getItem('userId');
+      const partnerId = currentChatTarget || document.getElementById('partner-id').value;
+
+      if (!userId || !partnerId) return;
+
+      const response = await fetch(`${apiUrl}/get-messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, partnerId })
+      });
+
+      const result = await response.json();
+      const container = document.getElementById('messages');
+      container.innerHTML = '';
+
+      if (result.success && Array.isArray(result.messages)) {
+        result.messages.forEach(msg => {
+          const div = document.createElement('div');
+          const isMe = msg.from === localStorage.getItem('username');
+          const time = new Date(msg.timestamp || Date.now()).toLocaleString();
+          div.className = `max-w-[70%] px-4 py-2 rounded shadow text-sm break-words ${isMe ? 'bg-blue-100 self-end text-right' : 'bg-gray-200 self-start text-left'}`;
+          div.innerHTML = `<div>${msg.text}</div><div class='text-xs text-gray-500 mt-1'>${time}</div>`;
+          container.appendChild(div);
+        });
+      } else {
+        container.innerHTML = '<p class="text-gray-500">暂无消息</p>';
+      }
+
+      container.scrollTop = container.scrollHeight;
+    }
   <script>
   let currentChatTarget = null; // 当前聊天对象
    const apiUrl = 'https://cece.8ryingye.workers.dev';
