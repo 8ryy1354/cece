@@ -346,20 +346,31 @@ function formatTime(ts) {
 
 // ✅ 工具函数：格式化消息
 function formatMessage(msg) {
-  if (msg.type === 'photo') {
-    return `<img src="${msg.url}" style="max-width: 200px;">`;
-  } else if (msg.type === 'video') {
-    return `<video src="${msg.url}" controls style="max-width: 200px;"></video>`;
-  } else if (msg.type === 'file') {
-    return `<a href="${msg.url}" target="_blank">下载文件</a>`;
-  } else {
-    return msg.text;
+  const time = formatTime(msg.timestamp);
+  const url = msg.url || '';
+  const text = escapeHtml(msg.text || '');
+
+  if (msg.type === 'photo' && url) {
+    return `<div><img src="${url}" class="max-w-xs rounded border" /><div class="text-sm text-gray-500 mt-1">${time}</div></div>`;
   }
-      // ✅ 自动滚动到底部
-  container.scrollTop = container.scrollHeight;
+
+  if (msg.type === 'video' && url) {
+    return `<div><video src="${url}" controls class="max-w-xs rounded border"></video><div class="text-sm text-gray-500 mt-1">${time}</div></div>`;
+  }
+
+  if (msg.type === 'file' && url) {
+    const filename = url.split('/').pop();
+    return `<div><a href="${url}" target="_blank" class="text-blue-600 underline">${filename}</a><div class="text-sm text-gray-500 mt-1">${time}</div></div>`;
+  }
+
+  // 默认纯文本
+  return `<div>${text}<div class="text-sm text-gray-500 mt-1">${time}</div></div>`;
 }
 
 
+function escapeHtml(str) {
+  return str?.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 
 
