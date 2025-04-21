@@ -338,6 +338,23 @@ async function loadChatPartners() {
   }
 }
 
+
+async function markMessagesAsRead(partnerId) {
+  const userId = localStorage.getItem('userId');
+  if (!userId || !partnerId) return;
+
+  await fetch(`${apiUrl}/mark-read`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId,
+      partnerId,
+      timestamp: Date.now()
+    })
+  });
+}
+
+
 async function deleteChatPartner(partnerId) {
   const userId = localStorage.getItem('userId');
   const response = await fetch(`${apiUrl}/delete-chat`, {
@@ -386,12 +403,16 @@ function updatePartnerListUI() {
     const chatBtn = document.createElement('button');
     chatBtn.textContent = '聊天';
     chatBtn.className = 'ml-2 text-blue-600';
-    chatBtn.onclick = () => {
-      document.getElementById('partner-id').value = partnerId;
-      currentChatTarget = partnerId;
-      window.unreadCounts[partnerId] = 0; // 清除未读
-      loadMessages();
-    };
+chatBtn.onclick = () => {
+  document.getElementById('partner-id').value = partnerId;
+  currentChatTarget = partnerId;
+
+  // ✅ 通知后端：我已读过这个对象的消息
+  markMessagesAsRead(partnerId);
+
+  window.unreadCounts[partnerId] = 0; // 仍然本地清除红点（UI立刻更新）
+  loadMessages();
+};
 
     const delBtn = document.createElement('button');
     delBtn.textContent = '删除';
