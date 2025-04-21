@@ -54,12 +54,25 @@
       <!-- 消息容器 -->
       <div id="messages" class="flex flex-col max-h-[300px] overflow-y-auto p-2 border rounded bg-gray-50 space-y-2"></div>
 
-      <!-- 聊天输入 -->
-      <div>
-        <textarea id="message" placeholder="输入消息内容" rows="3" class="w-full p-2 border rounded resize-none"></textarea>
-        <button onclick="sendMessage()" class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">发送</button>
-      </div>
-    </div>
+<!-- 聊天输入 -->
+<div>
+  <textarea id="message" placeholder="输入消息内容" rows="3" class="w-full p-2 border rounded resize-none"></textarea>
+  <button onclick="sendMessage()" class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">发送</button>
+
+  <!-- 🔽 上传文件区域：添加在发送按钮下面 -->
+  <div class="mt-4">
+    <input type="file" id="fileInput" class="block w-full text-sm text-gray-600" />
+    <select id="fileType" class="mt-2 p-1 border rounded">
+      <option value="photo">图片</option>
+      <option value="video">视频</option>
+      <option value="file">文件</option>
+    </select>
+    <button onclick="uploadAndSend()" class="mt-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded w-full">
+      上传并发送
+    </button>
+  </div>
+</div>
+
 
     <!-- 聊天对象区域（独立） -->
     <div id="chat-partners" class="max-w-2xl mx-auto bg-white shadow rounded p-4 mt-6 hidden">
@@ -229,6 +242,57 @@ if (result.ok) {
   alert('消息发送失败');
 }
 }
+
+async function uploadAndSend() {
+  const fileInput = document.getElementById('fileInput');
+  const file = fileInput.files[0];
+  const type = document.getElementById('fileType').value;
+  const from = localStorage.getItem('userId');
+  const to = document.getElementById('partner-id').value;
+
+  if (!file || !type || !from || !to) {
+    alert("请确认已选择文件、类型、聊天对象！");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const uploadRes = await fetch(`${apiUrl}/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  const result = await uploadRes.json();
+
+  if (result.success && result.url) {
+    const sendRes = await fetch(`${apiUrl}/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from,
+        to,
+        type,
+        url: result.url,
+        text: ''
+      })
+    });
+
+    const sendResult = await sendRes.json();
+    if (sendResult.ok || sendResult.success) {
+      alert("发送成功");
+      fileInput.value = "";
+      loadMessages();
+    } else {
+      alert("发送失败：" + (sendResult.message || ""));
+    }
+  } else {
+    alert("上传失败：" + (result.message || ""));
+  }
+}
+
+
+
 
 async function loadMessages() {
   const userId = localStorage.getItem('userId');
