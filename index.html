@@ -130,7 +130,7 @@ async function loginUser() {
     localStorage.setItem('userId', result.userId);
     localStorage.setItem('username', result.username);
 
-    // ✅ 1. 获取所有用户并保存为 userMap（用于显示用户名）
+    // ✅ 获取所有用户
     window.userMap = {};
     const userRes = await fetch(`${apiUrl}/get-users`, { method: 'POST' });
     const userData = await userRes.json();
@@ -140,13 +140,21 @@ async function loginUser() {
       });
     }
 
-    // ✅ 2. 加载聊天对象列表（使用 userMap 显示用户名+ID）
+    // ✅ 加载聊天对象列表
     loadChatPartners();
 
-    // ✅ 3. 开启自动刷新聊天内容
+    // ✅ 每 3 秒刷新聊天记录（当前聊天对象）
     setInterval(() => {
       if (currentChatTarget) {
         loadMessages();
+      }
+    }, 3000);
+
+    // ✅ 每 3 秒刷新未读消息
+    setInterval(() => {
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        loadUnreadCounts();
       }
     }, 3000);
 
@@ -155,7 +163,6 @@ async function loginUser() {
   }
 }
 
-setInterval(loadUnreadCounts, 3000); // 每 3 秒获取未读消息数量
 
 async function loadUnreadCounts() {
   const userId = localStorage.getItem('userId');
