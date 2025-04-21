@@ -186,8 +186,8 @@ if (result.ok) {
 }
 
 async function loadMessages() {
-  console.log("本地用户名：", localStorage.getItem('username'));
-console.log("聊天记录：", result.messages);
+ const username = localStorage.getItem('username');
+const isMe = msg.from.trim() === username.trim();
 
   const userId = localStorage.getItem('userId');
   const partnerId = currentChatTarget || document.getElementById('partner-id').value;
@@ -203,40 +203,51 @@ console.log("聊天记录：", result.messages);
     body: JSON.stringify({ userId, partnerId })
   });
 
-  const result = await response.json();
+  const result = await response.json(); // ✅ 确保这行代码在前
+  console.log("聊天记录：", result.messages);
+
   const container = document.getElementById('messages');
   container.innerHTML = '';
 
   if (result.success && Array.isArray(result.messages)) {
-result.messages.forEach(msg => {
-  const div = document.createElement('div');
+    const username = localStorage.getItem('username');
 
-  const isMe = msg.from === localStorage.getItem('username');
-  div.className = `p-2 rounded max-w-[80%] ${isMe ? 'bg-blue-100 self-end text-right ml-auto' : 'bg-gray-200 self-start mr-auto'}`;
-
-  const time = new Date(msg.timestamp || Date.now()).toLocaleTimeString(); // 时间戳格式
-  const content = msg.type === 'text'
-    ? msg.text
-    : msg.type === 'photo'
-      ? `<img src="${msg.url}" alt="图片" class="max-w-[200px] rounded">`
-      : msg.type === 'video'
-        ? `<video src="${msg.url}" controls class="max-w-[200px] rounded"></video>`
-        : `<a href="${msg.url}" target="_blank" class="text-blue-600 underline">点击查看文件</a>`;
-
-  div.innerHTML = `
-    <div class="text-sm font-semibold">${msg.from}</div>
-    <div class="my-1">${content}</div>
-    <div class="text-xs text-gray-500">${time}</div>
-  `;
-  container.appendChild(div);
-});
-
+    result.messages.forEach(msg => {
+      const isMe = msg.from.trim() === username.trim(); // ✅ 判断是否自己发的
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.style.textAlign = isMe ? 'right' : 'left'; // ✅ 显示位置
+      div.innerHTML = `<strong>${msg.from}</strong> <small style="color:gray;">${formatTime(msg.timestamp)}</small><br>${formatMessage(msg)}`;
+      container.appendChild(div);
+    });
   } else {
     container.innerHTML = '<p>暂无消息</p>';
   }
-    // ✅ 自动滚动到底部
+}
+
+// ✅ 工具函数：格式化时间戳
+function formatTime(ts) {
+  if (!ts) return '';
+  const date = new Date(ts);
+  return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+// ✅ 工具函数：格式化消息
+function formatMessage(msg) {
+  if (msg.type === 'photo') {
+    return `<img src="${msg.url}" style="max-width: 200px;">`;
+  } else if (msg.type === 'video') {
+    return `<video src="${msg.url}" controls style="max-width: 200px;"></video>`;
+  } else if (msg.type === 'file') {
+    return `<a href="${msg.url}" target="_blank">下载文件</a>`;
+  } else {
+    return msg.text;
+  }
+      // ✅ 自动滚动到底部
   container.scrollTop = container.scrollHeight;
 }
+
+
 
 
 
