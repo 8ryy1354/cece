@@ -279,7 +279,7 @@ if (result.success && result.url) {
   });
 
   const sendResult = await sendRes.json();
-
+console.log("[🐞] /send 返回内容：", sendResult);
   if (sendResult.success) {
     alert("发送成功");
     fileInput.value = "";
