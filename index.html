@@ -144,15 +144,9 @@ async function loginUser() {
     localStorage.setItem('userId', result.userId);
     localStorage.setItem('username', result.username);
 
-    // ✅ 获取所有用户
+    // ✅ 获取当前用户信息（优化：不再获取全部用户）
     window.userMap = {};
-    const userRes = await fetch(`${apiUrl}/get-users`, { method: 'POST' });
-    const userData = await userRes.json();
-    if (userData.success && Array.isArray(userData.users)) {
-      userData.users.forEach(user => {
-        window.userMap[user.userId] = user.username;
-      });
-    }
+    window.userMap[result.userId] = result.username;
 
     // ✅ 加载聊天对象列表
     loadChatPartners();
