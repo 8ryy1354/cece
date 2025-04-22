@@ -222,28 +222,26 @@ async function loadUnreadCounts() {
       document.getElementById('login-form').style.display = 'block';
     }
 
-async function sendMessage() {
-  const from = localStorage.getItem('userId'); // ✅ 发送者ID必须是userId
-  const to = document.getElementById('partner-id').value || '客服';
-  const text = document.getElementById('message').value;
+    async function sendMessage() {
+      const from = localStorage.getItem('userId'); // ✅ 发送者ID必须是userId
+      const to = document.getElementById('partner-id').value || '客服';
+      const text = document.getElementById('message').value;
 
-  const response = await fetch(`${apiUrl}/send`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, type: 'text', text })
-  });
+      const response = await fetch(`${apiUrl}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to, type: 'text', text })
+      });
 
-  const result = await response.json();
-  console.log("[📤] /send 返回：", result);  // ✅ 建议加一个日志调试
-
-  if (result.success) {
-    document.getElementById('message').value = ''; // ✅ 清空输入框
-    loadMessages(); // ✅ 刷新聊天记录
-  } else {
-    alert('消息发送失败：' + (result.message || ''));
-  }
+const result = await response.json();
+if (result.ok) {
+//  alert('消息发送成功');
+  document.getElementById('message').value = '';
+  loadMessages(); // ✅ 添加这一行，刷新聊天记录
+} else {
+  alert('消息发送失败');
 }
-
+}
 
 async function uploadAndSend() {
   const fileInput = document.getElementById('fileInput');
