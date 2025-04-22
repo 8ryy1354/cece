@@ -278,17 +278,19 @@ if (result.success && result.url) {
     })
   });
 
-const sendResult = await sendRes.json();
-console.log("[🐞] /send 返回内容：", sendResult);  // 👈👈 添加这行！
+  const sendResult = await sendRes.json();
 
-if (sendResult.success) {
-  alert("发送成功");
-  fileInput.value = "";
-  loadMessages();
+  if (sendResult.success) {
+    alert("发送成功");
+    fileInput.value = "";
+    loadMessages();
+  } else {
+    alert("发送失败：" + (sendResult.message || ""));
+  }
+
 } else {
-  alert("发送失败：" + (sendResult.message || ""));
+  alert("上传失败：" + (result.message || ""));
 }
-
 }
 
 
