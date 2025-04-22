@@ -263,32 +263,34 @@ async function uploadAndSend() {
     body: formData
   });
 
-  const result = await uploadRes.json();
+const result = await uploadRes.json();
 
-  if (result.success && result.url) {
-    const sendRes = await fetch(`${apiUrl}/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from,
-        to,
-        type,
-        url: result.url,
-        text: ''
-      })
-    });
+if (result.success && result.url) {
+  const sendRes = await fetch(`${apiUrl}/send`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from,
+      to,
+      type,
+      url: result.url,
+      text: ''
+    })
+  });
 
-    const sendResult = await sendRes.json();
-    if (sendResult.ok || sendResult.success) {
-      alert("发送成功");
-      fileInput.value = "";
-      loadMessages();
-    } else {
-      alert("发送失败：" + (sendResult.message || ""));
-    }
+  const sendResult = await sendRes.json();
+
+  if (sendResult.success) {
+    alert("发送成功");
+    fileInput.value = "";
+    loadMessages();
   } else {
-    alert("上传失败：" + (result.message || ""));
+    alert("发送失败：" + (sendResult.message || ""));
   }
+
+} else {
+  alert("上传失败：" + (result.message || ""));
+}
 }
 
 
